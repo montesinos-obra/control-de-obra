@@ -301,8 +301,10 @@ function renderBoards() {
 
 function renderMzFilter() {
   const mzs = MZ[currentSection];
-  let h = '<button class="mz-btn active" onclick="filterMz('all',this)">Todas</button>';
-  mzs.forEach(mz => { h += '<button class="mz-btn" onclick="filterMz(''+mz+'',this)">Mz '+mz+'</button>'; });
+  let h = '<button class="mz-btn active" onclick="filterMz(this)" data-mz="all">Todas</button>';
+  mzs.forEach(mz => {
+    h += '<button class="mz-btn" onclick="filterMz(this)" data-mz="' + mz + '">Mz ' + mz + '</button>';
+  });
   document.getElementById('mz-filter').innerHTML = h;
 }
 
@@ -367,7 +369,8 @@ function switchSection(sec) {
   document.getElementById('panel').innerHTML = hintHtml();
 }
 
-function filterMz(mz, btn) {
+function filterMz(btn) {
+  const mz = btn.dataset.mz || 'all';
   activeMz = mz; sel = null;
   document.querySelectorAll('.mz-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
