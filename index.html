@@ -210,17 +210,52 @@ async function loadSheet() {
   badge.textContent = '⟳ Actualizando...';
   badge.style.color = '#888';
   badge.style.background = '#f0efe9';
+  
+  // Intentar 3 métodos en orden
+  let text = null;
+  
+  // Método 1: fetch directo con no-cors workaround
   try {
-    const resp = await fetch(CSV_URL + '&t=' + Date.now());
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const text = await resp.text();
-    const rows = parseCSV(text);
-    allLotes = rows.map(buildLote).filter(Boolean);
-    badge.textContent = '● En vivo';
-    badge.style.color = '#1D9E75';
-    badge.style.background = '#EAF3DE';
-    renderAll();
-  } catch(e) {
+    const resp = await fetch(CSV_URL + '&t=' + Date.now(), {
+      method: 'GET',
+      mode: 'cors',
+      cache: 'no-cache'
+    });
+    if (resp.ok) text = await resp.text();
+  } catch(e1) { console.log('Método 1 falló:', e1.message); }
+  
+  // Método 2: proxy CORS gratuito
+  if (!text) {
+    try {
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(CSV_URL + '&t=' + Date.now());
+      const resp = await fetch(proxyUrl);
+      if (resp.ok) text = await resp.text();
+    } catch(e2) { console.log('Método 2 falló:', e2.message); }
+  }
+  
+  // Método 3: otro proxy
+  if (!text) {
+    try {
+      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(CSV_URL);
+      const resp = await fetch(proxyUrl);
+      if (resp.ok) text = await resp.text();
+    } catch(e3) { console.log('Método 3 falló:', e3.message); }
+  }
+  
+  if (text) {
+    try {
+      const rows = parseCSV(text);
+      allLotes = rows.map(buildLote).filter(Boolean);
+      badge.textContent = '● En vivo';
+      badge.style.color = '#1D9E75';
+      badge.style.background = '#EAF3DE';
+      renderAll();
+    } catch(ep) {
+      badge.textContent = '⚠ Error al procesar';
+      badge.style.color = '#e74c3c';
+      badge.style.background = '#fdecea';
+    }
+  } else {
     badge.textContent = '⚠ Sin conexión';
     badge.style.color = '#e74c3c';
     badge.style.background = '#fdecea';
