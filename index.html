@@ -420,7 +420,15 @@ function showFicha(l, poly) {
       '<div class="row" style="margin-top:6px"><span class="rl">Última actualización</span><span class="rv">'+l.fecha+'</span></div>'+
       '</div>'+
       '<div class="sec"><div class="sec-t">Actividades</div>'+acts+'</div>'+
-      '<div class="sec"><div class="sec-t">Foto de avance</div><div class="foto-box">&#128247; Subir / ver foto</div></div>';
+      '<div class="sec"><div class="sec-t">Foto de avance</div>
+      <div id="foto-preview-box" style="margin-bottom:8px;display:none;">
+        <img id="foto-preview" style="width:100%;border-radius:8px;border:1px solid #ddd;" />
+        <div style="font-size:10px;color:#aaa;margin-top:4px;text-align:center;">Foto actual del lote</div>
+      </div>
+      <input type="file" id="foto-input" accept="image/*" capture="environment" style="display:none;" onchange="procesarFoto(this)">
+      <div class="foto-box" onclick="document.getElementById('foto-input').click()">&#128247; Tomar / subir foto</div>
+      <div id="foto-status" style="font-size:11px;color:#888;margin-top:6px;text-align:center;display:none;"></div>
+    </div>';
   } else {
     obraSection = '<div class="sec"><div class="sec-t">Obra</div><div style="font-size:12px;color:#aaa;padding:8px 0">Sin obra iniciada</div></div>';
   }
@@ -446,6 +454,18 @@ function showFicha(l, poly) {
     obraSection+
     '<button class="btn" onclick="loadSheet()">&#8635; Refrescar datos</button>' +
     '<button class="btn" style="background:#534AB7;color:#fff;border-color:#534AB7;" onclick="abrirEditor(currentLote)">&#9998; Actualizar ficha</button>';
+  
+  // Mostrar foto existente si tiene
+  setTimeout(function() {
+    if (l.rutaFoto) {
+      const previewBox = document.getElementById('foto-preview-box');
+      const previewImg = document.getElementById('foto-preview');
+      if (previewBox && previewImg) {
+        previewImg.src = l.rutaFoto;
+        previewBox.style.display = 'block';
+      }
+    }
+  }, 50);
 }
 
 let currentLote = null;
@@ -509,6 +529,54 @@ async function guardarCambios() {
 
 // Actualizar currentLote al mostrar ficha
 const _origShowFicha = showFicha;
+
+function procesarFoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const status = document.getElementById('foto-status');
+  status.style.display = 'block';
+  status.textContent = '⟳ Subiendo foto...';
+  status.style.color = '#888';
+  
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const base64 = e.target.result;
+    const l = currentLote;
+    if (!l) return;
+    
+    // Mostrar preview local inmediatamente
+    document.getElementById('foto-preview').src = base64;
+    document.getElementById('foto-preview-box').style.display = 'block';
+    
+    try {
+      const payload = {
+        tipo: 'foto',
+        seccion: l.seccion,
+        manzana: l.manzana,
+        lote: l.lote,
+        imagen: base64,
+        mimeType: file.type
+      };
+      const resp = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      const result = await resp.json();
+      if (result.ok) {
+        status.textContent = '✅ Foto guardada en Google Drive';
+        status.style.color = '#1D9E75';
+        l.rutaFoto = result.url;
+      } else {
+        status.textContent = '⚠ Error: ' + (result.error||'No se pudo subir');
+        status.style.color = '#e74c3c';
+      }
+    } catch(err) {
+      status.textContent = '⚠ Error de conexión';
+      status.style.color = '#e74c3c';
+    }
+  };
+  reader.readAsDataURL(file);
+}
 
 // Inicializar — carga lazy del SVG de fondo
 renderMzFilter();
