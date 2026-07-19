@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Residencial Montesinos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif;}
+body{background:#f5f4f0;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#fff;border-bottom:1px solid #e5e4e0;flex-wrap:wrap;gap:8px;}
+.topbar h1{font-size:15px;font-weight:600;}
+.sync{font-size:10px;padding:2px 8px;background:#EAF3DE;color:#1D9E75;border-radius:10px;margin-left:8px;}
+.tabs{display:flex;gap:6px;padding:10px 20px;background:#fff;border-bottom:1px solid #e5e4e0;}
+.tab{padding:8px 18px;border-radius:8px 8px 0 0;border:1px solid #e5e4e0;background:#fafaf8;font-size:13px;font-weight:600;color:#888;cursor:pointer;}
+.tab.active{background:#534AB7;color:#fff;border-color:#534AB7;}
+.boards{display:grid;grid-template-columns:130px 1fr 1fr;gap:10px;padding:12px 20px;background:#fafaf8;border-bottom:1px solid #e5e4e0;}
+.board{background:#fff;border-radius:10px;border:1px solid #e5e4e0;padding:10px 14px;}
+.board.center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.board-title{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.stats{display:flex;gap:8px;}
+.stat{flex:1;text-align:center;padding:6px 4px;border-radius:8px;background:#fafaf8;}
+.stat-val{font-size:20px;font-weight:600;}.stat-lbl{font-size:10px;color:#888;margin-top:2px;}
+.bfoot{margin-top:8px;padding-top:8px;border-top:1px solid #f0efe9;font-size:11px;color:#888;display:flex;justify-content:space-between;}
+.bfoot b{color:#1D9E75;}
+.big{font-size:26px;font-weight:700;}.lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+.main{display:grid;grid-template-columns:1fr 330px;height:calc(100vh - 205px);}
+.pw{padding:12px 16px;background:#f0efe9;display:flex;flex-direction:column;overflow:hidden;}
+.ctrl{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;}
+.leys{display:flex;flex-wrap:wrap;gap:10px;}
+.ley{display:flex;align-items:center;gap:4px;font-size:11px;color:#555;}
+.ld{width:10px;height:10px;border-radius:2px;}
+.lr{width:10px;height:10px;border-radius:2px;border:2px solid;background:transparent;}
+.ll{font-size:10px;color:#999;font-weight:700;text-transform:uppercase;margin-right:2px;}
+.mzbar{display:flex;gap:4px;flex-wrap:wrap;}
+.mb{padding:4px 10px;border-radius:20px;border:1px solid #ddd;background:#fff;font-size:11px;cursor:pointer;}
+.mb.active{background:#534AB7;color:#fff;border-color:#534AB7;}
+.sw{position:relative;flex:1;min-height:0;}
+#plano{width:100%;height:100%;border-radius:8px;border:1px solid #ddd;background:#fafaf8;display:block;}
+polygon.lote{cursor:pointer;}polygon.lote.sel{stroke-width:3.5!important;fill-opacity:1!important;}
+.tip{position:absolute;background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px 10px;font-size:11px;pointer-events:none;display:none;z-index:10;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.panel{background:#fff;border-left:1px solid #e5e4e0;padding:16px;overflow-y:auto;}
+.hint{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:#ccc;font-size:13px;text-align:center;gap:8px;}
+.fh{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px;}
+.ft{font-size:14px;font-weight:700;color:#111;}.fs{font-size:11px;color:#888;margin-top:2px;}
+.badges{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+.badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:700;}
+.bv{background:#EAF3DE;color:#3B6D11;}.bvd{background:#E1F0F8;color:#0E6488;}
+.bent{background:#FCF3CF;color:#9A7D0A;}
+.bni{background:#EFEFEF;color:#666;}.bep{background:#FCE4EC;color:#AD1457;}
+.sec{border-top:1px solid #f0efe9;padding-top:10px;margin-top:10px;}
+.sec-t{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+.row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;}
+.rl{color:#888;}.rv{font-weight:600;color:#111;text-align:right;}
+.pb-bg{background:#eee;border-radius:6px;height:8px;margin-top:4px;overflow:hidden;}
+.pb-fill{height:8px;border-radius:6px;background:linear-gradient(90deg,#534AB7,#7f77dd);}
+.act{display:flex;align-items:center;gap:7px;font-size:11px;padding:3px 0;}
+.act-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ad{background:#1D9E75;}.aa{background:#7F77DD;}.ap{background:#ddd;}
+.fbox{background:#f5f4f0;border:1.5px dashed #ccc;border-radius:8px;height:80px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#aaa;cursor:pointer;margin-top:4px;}
+.fbox:hover{background:#e8e7e0;}
+.btn{width:100%;padding:9px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:12px;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn:hover{background:#f5f4f0;}
+.btnp{background:#534AB7;color:#fff;border-color:#534AB7;}
+.btnp:hover{background:#4339a0;}
+.mbg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
+.mdl{background:#fff;border-radius:12px;padding:24px;width:90%;max-width:420px;max-height:90vh;overflow-y:auto;}
+.mdl-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.mdl-t{font-size:15px;font-weight:700;}
+.xbtn{border:none;background:none;font-size:22px;cursor:pointer;color:#888;}
+.fld{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+.fld label{font-size:11px;color:#888;font-weight:700;text-transform:uppercase;}
+.fld select,.fld input,.fld textarea{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;}
+.fld textarea{resize:vertical;}
+@media(max-width:760px){
+  .boards{grid-template-columns:1fr;}
+  .main{grid-template-columns:1fr;height:auto;}
+  .pw{height:60vw;min-height:260px;}
+  .panel{border-left:none;border-top:1px solid #e5e4e0;}
+}
+</style></head><body>
+<div class="topbar">
+  <div>
+    <h1>&#127968; Residencial Montesinos <span class="sync" id="sync">&#9675; Cargando...</span></h1>
+    <div style="font-size:11px;color:#888;" id="sub">Cargando...</div>
+  </div>
+  <button class="btn" style="width:auto;padding:6px 12px;margin-top:0;" onclick="loadSheet()">&#8635; Actualizar</button>
+</div>
+<div class="tabs">
+  <div class="tab active" id="tab-c" onclick="switchSec('campello')">Secci&#243;n Campello</div>
+  <div class="tab" id="tab-m" onclick="switchSec('campina')">Paseo Montesinos</div>
+</div>
+<div class="boards" id="boards"><div style="padding:20px;color:#aaa;">Cargando...</div></div>
+<div class="main">
+  <div class="pw">
+    <div class="ctrl">
+      <div class="leys">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span class="ll">Relleno:</span>
+          <div class="ley"><div class="ld" style="background:#63991a"></div>Disponible</div>
+          <div class="ley"><div class="ld" style="background:#7ec8e3"></div>Vendida</div>
+          <div class="ley"><div class="ld" style="background:#F4D03F"></div>Entregada</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span class="ll">Contorno:</span>
+          <div class="ley"><div class="lr" style="border-color:#8a8a8a"></div>No iniciada</div>
+          <div class="ley"><div class="lr" style="border-color:#c2185b"></div>En proceso</div>
+        </div>
+      </div>
+      <div class="mzbar" id="mzbar"></div>
+    </div>
+    <div class="sw">
+      <svg id="plano" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <image id="bg" href="" width="800" height="600" opacity="0.3"/>
+        <g id="layer"></g>
+      </svg>
+      <div class="tip" id="tip"></div>
+    </div>
+  </div>
+  <div class="panel" id="panel">
+    <div class="hint">&#127968;<br>Selecciona un lote<br>para ver su ficha</div>
+  </div>
+</div>
+<div class="mbg" id="modal">
+  <div class="mdl">
+    <div class="mdl-h"><div class="mdl-t" id="mdl-t">Editar lote</div><button class="xbtn" onclick="cerrarModal()">&#215;</button></div>
+    <div class="fld"><label>Estatus Venta</label><select id="e-venta"><option>Disponible</option><option>Vendida</option></select></div>
+    <div class="fld"><label>Estatus Obra</label><select id="e-obra"><option>No Iniciada</option><option>En Proceso</option></select></div>
+    <div class="fld"><label>Avance %</label><input id="e-avance" type="number" min="0" max="100"></div>
+    <div class="fld"><label>Nombre Cliente</label><input id="e-cliente" type="text"></div>
+    <div class="fld"><label>Entrega Confirmada</label><select id="e-entrega"><option value="No">No</option><option value="Si">S&#237;</option></select></div>
+    <div class="fld"><label>Observaciones</label><textarea id="e-obs" rows="3"></textarea></div>
+    <button class="btn btnp" id="btn-save" onclick="guardar()">&#128190; Guardar</button>
+    <button class="btn" onclick="cerrarModal()">Cancelar</button>
+  </div>
+</div>
+<input type="file" id="foto-input" accept="image/*" capture="environment" style="display:none;" onchange="subirFoto(this)">
+<script>
+var CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vRVOIjUxf8hrwhfpeNI9pzBW6akvDA-NWaXymJbZGaqes-g1B8BLR6v6kPjaR1hFNEI8n8IetFaD8Br/pub?output=csv";
+var API="https://script.google.com/macros/s/AKfycbyZFoohguwwS8MTax9U1Rra5QQatREh53ZWB3CP4y_UfLM8y9lDjgzpciMIK7auwi6j/exec";
+var GC={"880|1":{"pts":"382.44,528.27 353.93,533.06 363.94,593.92 389.7,589.53 391.35,582.27 382.44,528.27","cx":376.3,"cy":565.4,"m2ter":186.73},"880|2":{"pts":"353.93,533.06 331.04,536.76 341.19,597.62 363.94,593.92 353.93,533.06","cx":347.5,"cy":565.3,"m2ter":150.0},"880|4":{"pts":"308.57,533.61 286.77,525.8 267.04,580.07 288.69,588.02 308.57,533.61","cx":287.8,"cy":556.9,"m2ter":140.62},"880|5":{"pts":"286.77,525.8 264.98,517.85 245.25,572.12 267.04,580.07 286.77,525.8","cx":266.0,"cy":549.0,"m2ter":140.62},"880|6":{"pts":"264.98,517.85 243.33,509.9 223.59,564.31 245.25,572.12 264.98,517.85","cx":244.3,"cy":541.0,"m2ter":140.62},"880|7":{"pts":"243.33,509.9 221.54,502.09 201.8,556.36 223.59,564.31 243.33,509.9","cx":222.6,"cy":533.2,"m2ter":140.62},"880|8":{"pts":"179.97,548.77 201.8,556.36 221.54,502.09 199.88,494.14 179.97,548.77","cx":200.8,"cy":525.3,"m2ter":140.62},"880|9":{"pts":"179.97,548.77 199.88,494.14 181.16,481.16 108.92,536.49","cx":167.5,"cy":515.1,"m2ter":307.33},"880|10":{"pts":"181.16,481.16 108.92,536.49 110.97,458.37 173.22,459.88","cx":143.6,"cy":484.0,"m2ter":363.84},"880|11":{"pts":"173.29,459.88 173.84,436.71 111.75,435.21 111.07,458.37 173.29,459.88 111.07,458.37","cx":142.4,"cy":449.9,"m2ter":156.46},"880|12":{"pts":"174.39,413.69 112.3,412.18 111.75,435.21 173.84,436.71 174.39,413.69","cx":143.1,"cy":424.4,"m2ter":156.46},"880|13":{"pts":"174.94,390.53 112.85,389.02 112.58,401.9 112.3,412.18 174.39,413.69 174.94,390.53","cx":137.4,"cy":401.5,"m2ter":156.46},"880|14":{"pts":"175.62,367.36 113.4,365.86 112.85,389.02 174.94,390.53 175.62,367.36","cx":144.2,"cy":378.2,"m2ter":156.46},"880|15":{"pts":"176.17,344.34 113.95,342.83 113.4,365.86 175.62,367.36 176.17,344.34","cx":144.8,"cy":355.1,"m2ter":156.46},"880|16":{"pts":"176.72,321.18 114.63,319.67 113.95,342.83 176.17,344.34 176.72,321.18","cx":145.4,"cy":332.0,"m2ter":156.46},"880|17":{"pts":"177.4,298.01 115.18,296.51 114.63,319.67 176.72,321.18 177.4,298.01","cx":146.0,"cy":308.8,"m2ter":156.46},"880|18":{"pts":"177.95,274.99 115.73,273.48 115.18,296.51 177.4,298.01 177.95,274.99","cx":146.6,"cy":285.7,"m2ter":156.46},"880|19":{"pts":"178.5,251.82 116.28,250.32 116,263.61 115.73,273.48 177.95,274.99 178.5,251.82","cx":140.9,"cy":262.8,"m2ter":156.46},"880|20":{"pts":"118.24,157.28 187.95,218.87 178.71,242.25 178.44,251.84 116.18,250.34","cx":155.9,"cy":224.1,"m2ter":450.75},"880|21":{"pts":"208.6,145.09 118.24,157.28 187.95,218.87 210.52,206.62 218.61,205.39","cx":188.8,"cy":186.7,"m2ter":438.86},"880|22":{"pts":"238.94,139.58 209.42,144.93 208.61,145.06 218.66,205.36 249.08,200.43 238.94,139.58","cx":224.9,"cy":167.1,"m2ter":200.0},"880|23":{"pts":"269.37,134.5 238.94,139.58 249.08,200.43 279.51,195.36 269.37,134.5","cx":259.2,"cy":167.5,"m2ter":200.0},"880|24":{"pts":"299.79,129.43 269.37,134.5 279.51,195.36 309.94,190.29 299.79,129.43","cx":289.7,"cy":162.4,"m2ter":200.0},"880|25":{"pts":"330.22,124.5 299.79,129.43 309.94,190.29 340.36,185.22 330.22,124.5","cx":320.1,"cy":157.4,"m2ter":200.0},"880|26":{"pts":"360.65,119.43 330.22,124.5 340.36,185.22 370.79,180.28 360.65,119.43","cx":350.5,"cy":152.4,"m2ter":200.0},"880|27":{"pts":"391.07,114.36 360.65,119.43 370.79,180.28 401.22,175.21 391.07,114.36","cx":380.9,"cy":147.3,"m2ter":200.0},"880|28":{"pts":"421.5,109.29 391.07,114.36 401.22,175.21 431.5,170.14 421.5,109.29","cx":411.3,"cy":142.2,"m2ter":200.0},"880|29":{"pts":"451.93,104.22 421.5,109.29 431.5,170.14 461.93,165.07 451.93,104.22","cx":441.7,"cy":137.2,"m2ter":200.0},"880|30":{"pts":"482.35,99.28 451.93,104.22 461.93,165.07 492.36,160 482.35,99.28","cx":472.1,"cy":132.1,"m2ter":200.0},"880|31":{"pts":"512.78,94.21 482.35,99.28 492.36,160 522.78,155.06 512.78,94.21","cx":502.6,"cy":127.1,"m2ter":200.0},"880|32":{"pts":"543.21,89.14 512.78,94.21 522.78,155.06 553.21,149.99 543.21,89.14","cx":533.0,"cy":122.1,"m2ter":200.0},"880|33":{"pts":"603.91,172.91 576.63,93.84 572.51,84.38 543.31,89.18 553.32,150.02 562.91,148.38","cx":568.8,"cy":123.1,"m2ter":200.0},"880|37":{"pts":"661.36,446.13 630.65,487.15 622.84,488.52 632.98,549.37 673.16,542.65","cx":644.2,"cy":502.8,"m2ter":281.84},"880|38":{"pts":"622.7,488.52 599.95,492.22 610.09,553.07 632.84,549.37 622.7,488.52","cx":616.4,"cy":520.8,"m2ter":300.38},"880|39":{"pts":"599.95,492.22 577.2,496.06 587.2,556.91 610.09,553.07 599.95,492.22","cx":593.6,"cy":524.6,"m2ter":150.0},"880|40":{"pts":"577.2,496.06 554.31,499.76 564.45,560.61 587.2,556.91 577.2,496.06","cx":570.8,"cy":528.3,"m2ter":150.0},"880|41":{"pts":"554.31,499.76 531.56,503.6 541.56,564.45 564.45,560.61 554.31,499.76","cx":548.0,"cy":532.1,"m2ter":150.0},"880|42":{"pts":"531.56,503.6 508.67,507.43 518.81,568.15 541.56,564.45 531.56,503.6","cx":525.1,"cy":535.9,"m2ter":150.0},"880|43":{"pts":"508.67,507.43 485.92,511.13 495.92,571.99 518.81,568.15 508.67,507.43","cx":502.3,"cy":539.7,"m2ter":150.0},"880|44":{"pts":"485.92,511.13 463.03,514.97 473.17,575.83 495.92,571.99 485.92,511.13","cx":479.5,"cy":543.5,"m2ter":150.0},"880|45":{"pts":"446.72,576.51 437.26,519.22 463.03,514.97 473.17,575.83 447.13,580.07","cx":455.1,"cy":547.1,"m2ter":150.0},"881|1":{"pts":"605.98,347.49 547.04,357.22 551.29,383.12 611.46,373.12 605.98,347.49","cx":578.9,"cy":365.2,"m2ter":166.41},"881|2":{"pts":"611.46,373.12 551.29,383.12 555.68,409.03 616.94,398.75 611.46,373.12","cx":583.8,"cy":391.0,"m2ter":166.41},"881|3":{"pts":"619.68,411.63 616.94,398.75 555.68,409.03 559.93,434.79 621.19,424.65 619.68,411.63","cx":594.7,"cy":415.8,"m2ter":166.41},"881|4":{"pts":"621.19,424.65 559.93,434.79 564.18,460.7 624.48,450.69 621.19,424.65","cx":592.4,"cy":442.7,"m2ter":166.41},"881|5":{"pts":"554.58,402.86 531.83,406.7 541.42,464.4 564.18,460.7 554.58,402.86","cx":548.0,"cy":433.7,"m2ter":142.5},"881|6":{"pts":"531.83,406.7 508.94,410.4 518.54,468.24 541.42,464.4 531.83,406.7","cx":525.2,"cy":437.4,"m2ter":142.5},"881|7":{"pts":"508.94,410.4 486.19,414.24 495.78,472.07 518.54,468.24 508.94,410.4","cx":502.4,"cy":441.2,"m2ter":142.5},"881|8":{"pts":"486.19,414.24 463.3,418.07 472.9,475.77 495.78,472.07 486.19,414.24","cx":479.5,"cy":445.0,"m2ter":142.5},"881|9":{"pts":"463.3,418.07 440.55,421.77 450.14,479.61 472.9,475.77 463.3,418.07","cx":456.7,"cy":448.8,"m2ter":142.5},"881|10":{"pts":"440.55,421.77 417.8,425.61 427.26,483.31 450.14,479.61 440.55,421.77","cx":433.9,"cy":452.6,"m2ter":142.5},"881|11":{"pts":"417.8,425.61 394.91,429.31 404.5,487.15 427.26,483.31 417.8,425.61","cx":411.1,"cy":456.3,"m2ter":142.5},"881|12":{"pts":"394.91,429.31 372.16,433.15 381.75,490.99 404.5,487.15 394.91,429.31","cx":388.3,"cy":460.1,"m2ter":142.5},"881|13":{"pts":"372.16,433.15 349.27,436.85 358.87,494.69 381.75,490.99 372.16,433.15","cx":365.5,"cy":463.9,"m2ter":142.5},"881|14":{"pts":"349.27,436.85 326.52,440.69 336.11,498.53 358.87,494.69 349.27,436.85","cx":342.7,"cy":467.7,"m2ter":142.5},"881|16":{"pts":"233.73,409.17 211.39,412.87 210.16,458.51 212.9,459.46 241.27,454.8 233.73,409.17","cx":221.9,"cy":439.0,"m2ter":131.68},"881|17":{"pts":"253.47,405.88 233.73,409.17 241.27,454.8 261.14,451.52 253.47,405.88","cx":247.4,"cy":430.3,"m2ter":97.5},"881|18":{"pts":"273.34,402.59 253.47,405.88 261.14,451.52 280.88,448.23 273.34,402.59","cx":267.2,"cy":427.1,"m2ter":97.5},"881|19":{"pts":"296.09,398.89 273.34,402.59 280.88,448.23 303.63,444.53 296.09,398.89","cx":288.5,"cy":423.6,"m2ter":112.5},"881|20":{"pts":"318.98,395.05 296.09,398.89 303.63,444.53 326.52,440.69 318.98,395.05","cx":311.3,"cy":419.8,"m2ter":112.5},"881|21":{"pts":"341.73,391.35 318.98,395.05 326.52,440.69 349.27,436.85 341.73,391.35","cx":334.1,"cy":416.0,"m2ter":112.5},"881|22":{"pts":"364.48,387.51 341.73,391.35 349.27,436.85 372.16,433.15 364.48,387.51","cx":356.9,"cy":412.2,"m2ter":112.5},"881|23":{"pts":"387.37,383.67 364.48,387.51 372.16,433.15 394.91,429.31 387.37,383.67","cx":379.7,"cy":408.4,"m2ter":112.5},"881|24":{"pts":"410.12,379.97 387.37,383.67 394.91,429.31 417.8,425.61 410.12,379.97","cx":402.6,"cy":404.6,"m2ter":112.5},"881|25":{"pts":"433.01,376.13 410.12,379.97 417.8,425.61 440.55,421.77 433.01,376.13","cx":425.4,"cy":400.9,"m2ter":112.5},"881|26":{"pts":"455.76,372.43 433.01,376.13 440.55,421.77 463.3,418.07 455.76,372.43","cx":448.2,"cy":397.1,"m2ter":112.5},"881|27":{"pts":"478.65,368.6 455.76,372.43 463.3,418.07 486.19,414.24 478.65,368.6","cx":471.0,"cy":393.3,"m2ter":112.5},"881|28":{"pts":"501.4,364.76 478.65,368.6 486.19,414.24 508.94,410.4 501.4,364.76","cx":493.8,"cy":389.5,"m2ter":112.5},"881|29":{"pts":"524.29,361.06 501.4,364.76 508.94,410.4 531.83,406.7 524.29,361.06","cx":516.6,"cy":385.7,"m2ter":112.5},"881|30":{"pts":"547.04,357.22 524.29,361.06 531.83,406.7 554.58,402.86 547.04,357.22","cx":539.4,"cy":382.0,"m2ter":112.5},"882|1":{"pts":"575.69,204.95 568.83,184.94 519.77,193.03 524.15,218.93 576.78,210.16 575.69,204.95","cx":553.0,"cy":202.4,"m2ter":166.41},"882|2":{"pts":"576.78,210.16 524.15,218.93 528.4,244.7 582.27,235.79 576.78,210.16","cx":552.9,"cy":227.4,"m2ter":166.41},"882|3":{"pts":"582.27,235.79 528.4,244.7 532.65,270.6 587.75,261.42 582.27,235.79","cx":557.8,"cy":253.1,"m2ter":166.41},"882|4":{"pts":"587.75,261.42 532.65,270.6 536.9,296.37 593.23,287.19 587.75,261.42","cx":562.6,"cy":278.9,"m2ter":166.41},"882|5":{"pts":"529.36,250.87 506.61,254.57 514.15,300.21 536.9,296.37 529.36,250.87","cx":521.8,"cy":275.5,"m2ter":112.5},"882|6":{"pts":"506.61,254.57 483.72,258.4 491.4,304.04 514.15,300.21 506.61,254.57","cx":499.0,"cy":279.3,"m2ter":112.5},"882|7":{"pts":"483.72,258.4 460.97,262.1 468.51,307.74 491.4,304.04 483.72,258.4","cx":476.1,"cy":283.1,"m2ter":112.5},"882|8":{"pts":"460.97,262.1 438.22,265.94 445.76,311.58 468.51,307.74 460.97,262.1","cx":453.4,"cy":286.8,"m2ter":112.5},"882|9":{"pts":"438.22,265.94 415.33,269.64 422.87,315.28 445.76,311.58 438.22,265.94","cx":430.5,"cy":290.6,"m2ter":112.5},"882|10":{"pts":"415.33,269.64 392.58,273.48 400.12,319.12 422.87,315.28 415.33,269.64","cx":407.7,"cy":294.4,"m2ter":112.5},"882|11":{"pts":"392.58,273.48 369.69,277.32 377.23,322.96 400.12,319.12 392.58,273.48","cx":384.9,"cy":298.2,"m2ter":112.5},"882|12":{"pts":"369.69,277.32 346.94,281.02 354.48,326.66 377.23,322.96 369.69,277.32","cx":362.1,"cy":302.0,"m2ter":112.5},"882|13":{"pts":"346.94,281.02 324.05,284.86 331.59,330.49 354.48,326.66 346.94,281.02","cx":339.3,"cy":305.8,"m2ter":112.5},"882|14":{"pts":"324.05,284.86 301.3,288.56 308.84,334.2 331.59,330.49 324.05,284.86","cx":316.4,"cy":309.5,"m2ter":112.5},"882|15":{"pts":"301.3,288.56 278.41,292.39 286.09,338.03 308.84,334.2 301.3,288.56","cx":293.7,"cy":313.3,"m2ter":112.5},"882|16":{"pts":"278.41,292.39 255.66,296.23 263.2,341.73 286.09,338.03 278.41,292.39","cx":270.8,"cy":317.1,"m2ter":112.5},"882|17":{"pts":"255.66,296.23 235.93,299.38 243.46,345.02 263.2,341.73 255.66,296.23","cx":249.6,"cy":320.6,"m2ter":97.16},"882|18":{"pts":"235.93,299.38 214.27,303.08 213.04,350.09 243.46,345.02 235.93,299.38","cx":226.7,"cy":324.4,"m2ter":128.46},"882|19":{"pts":"246.07,238.39 224.28,241.96 215.78,243.19 214.27,303.08 255.66,296.23 246.07,238.39","cx":231.2,"cy":264.6,"m2ter":219.73},"882|20":{"pts":"268.96,234.56 246.07,238.39 255.66,296.23 278.41,292.39 268.96,234.56","cx":262.3,"cy":265.4,"m2ter":142.5},"882|21":{"pts":"291.71,230.86 268.96,234.56 278.41,292.39 301.3,288.56 291.71,230.86","cx":285.1,"cy":261.6,"m2ter":142.5},"882|22":{"pts":"314.46,227.02 291.71,230.86 301.3,288.56 324.05,284.86 314.46,227.02","cx":307.9,"cy":257.8,"m2ter":142.5},"882|23":{"pts":"337.35,223.32 314.46,227.02 324.05,284.86 346.94,281.02 337.35,223.32","cx":330.7,"cy":254.1,"m2ter":142.5},"882|24":{"pts":"360.1,219.48 337.35,223.32 346.94,281.02 369.69,277.32 360.1,219.48","cx":353.5,"cy":250.3,"m2ter":142.5},"882|25":{"pts":"382.99,215.64 360.1,219.48 369.69,277.32 392.58,273.48 382.99,215.64","cx":376.3,"cy":246.5,"m2ter":142.5},"882|26":{"pts":"405.74,211.94 382.99,215.64 392.58,273.48 415.33,269.64 405.74,211.94","cx":399.2,"cy":242.7,"m2ter":142.5},"882|27":{"pts":"428.63,208.1 405.74,211.94 415.33,269.64 438.22,265.94 428.63,208.1","cx":422.0,"cy":238.9,"m2ter":142.5},"882|28":{"pts":"451.38,204.4 428.63,208.1 438.22,265.94 460.97,262.1 451.38,204.4","cx":444.8,"cy":235.1,"m2ter":142.5},"882|29":{"pts":"474.27,200.57 451.38,204.4 460.97,262.1 483.72,258.4 474.27,200.57","cx":467.6,"cy":231.4,"m2ter":142.5},"882|30":{"pts":"497.02,196.87 474.27,200.57 483.72,258.4 506.61,254.57 497.02,196.87","cx":490.4,"cy":227.6,"m2ter":142.5},"882|31":{"pts":"519.77,193.03 497.02,196.87 506.61,254.57 529.36,250.87 519.77,193.03","cx":513.2,"cy":223.8,"m2ter":142.5},"880|3":{"pts":"341.19,597.61 316.92,598.29 288.68,588.01 308.56,533.61 331.05,536.76","cx":317.3,"cy":570.9,"m2ter":242.4}};
+var GM={"M-14|1-A":{"pts":"277.24,121.74 326.07,122.96 328.5,48.52 300.05,47.98 285.91,63.14 272.68,116.94 277.24,121.74","cx":295.38,"cy":91.86,"m2ter":174.44},"M-14B|27":{"pts":"650.56,542.67 643.74,570.15 563.42,556.34 570.25,528.87","cx":606.99,"cy":549.51,"m2ter":118.84},"M-14B|26":{"pts":"657.39,515.2 650.56,542.67 570.25,528.87 577.24,501.26","cx":613.86,"cy":522.0,"m2ter":119.08},"M-14B|14":{"pts":"739.65,184.95 732.83,212.43 652.51,198.62 659.34,171.15","cx":696.08,"cy":191.79,"m2ter":118.84},"M-14B|16":{"pts":"725.84,239.9 719.01,267.51 638.86,253.71 645.69,226.1","cx":682.35,"cy":246.8,"m2ter":119.17},"M-14B|12":{"pts":"753.31,129.86 746.48,157.34 666.17,143.53 673.0,116.06","cx":709.74,"cy":136.7,"m2ter":118.84},"M-14B|25":{"pts":"664.22,487.59 657.39,515.2 577.24,501.26 584.07,473.78","cx":620.73,"cy":494.46,"m2ter":118.91},"M-14B|23":{"pts":"678.04,432.64 671.21,460.11 590.9,446.31 597.73,418.7","cx":634.47,"cy":439.44,"m2ter":119.14},"M-14B|21":{"pts":"691.7,377.55 684.87,405.03 604.55,391.22 611.38,363.74","cx":648.13,"cy":384.39,"m2ter":118.84},"M-14B|19":{"pts":"705.35,322.46 698.52,350.07 618.21,336.13 625.04,308.66","cx":661.78,"cy":329.33,"m2ter":119.14},"M-14B|17":{"pts":"719.01,267.51 712.18,294.99 631.87,281.18 638.86,253.71","cx":675.48,"cy":274.35,"m2ter":118.78},"M-14B|15":{"pts":"732.83,212.43 725.84,239.9 645.69,226.1 652.51,198.62","cx":689.22,"cy":219.26,"m2ter":118.78},"M-14B|13":{"pts":"746.48,157.34 739.65,184.95 659.34,171.15 666.17,143.53","cx":702.91,"cy":164.24,"m2ter":119.4},"M-14B|11":{"pts":"673.0,116.06 679.83,88.58 760.14,102.39 753.31,129.86","cx":716.57,"cy":109.22,"m2ter":118.84},"M-14B|24":{"pts":"671.21,460.11 664.22,487.59 584.07,473.78 590.9,446.31","cx":627.6,"cy":466.95,"m2ter":118.78},"M-14B|22":{"pts":"684.87,405.03 678.04,432.64 597.73,418.7 604.55,391.22","cx":641.3,"cy":411.89,"m2ter":119.14},"M-14B|20":{"pts":"698.52,350.07 691.7,377.55 611.38,363.74 618.21,336.13","cx":654.95,"cy":356.88,"m2ter":119.14},"M-14B|18":{"pts":"712.18,294.99 705.35,322.46 625.04,308.66 631.87,281.18","cx":668.61,"cy":301.82,"m2ter":118.84},"M-25A|4":{"pts":"39.77,116.19 42.37,39.99 76.19,40.81 73.59,117.01","cx":57.98,"cy":78.5,"m2ter":133.2},"M-25A|3":{"pts":"76.19,40.81 109.84,41.62 107.24,117.82 73.59,117.01","cx":91.71,"cy":79.31,"m2ter":132.55},"M-14A|12":{"pts":"237.3,422.08 184.63,420.86 200.72,356.3 205.6,353.05 239.58,353.86 237.3,422.08 184.63,420.86","cx":212.82,"cy":392.73,"m2ter":159.58},"M-14A|1":{"pts":"556.6,366.05 540.99,429.12 507.17,428.44 509.45,360.09 552.04,361.17 556.66,365.98","cx":537.15,"cy":385.14,"m2ter":144.17},"M-14A|18":{"pts":"439.7,426.82 405.89,426.0 408.33,357.79 441.98,358.6","cx":423.98,"cy":392.3,"m2ter":118.95},"M-14A|13":{"pts":"270.95,422.89 237.3,422.08 239.58,353.86 273.23,354.68","cx":255.26,"cy":388.38,"m2ter":118.66},"M-14A|14":{"pts":"304.77,423.7 270.95,422.89 273.23,354.68 307.04,355.49","cx":289.0,"cy":389.19,"m2ter":119.23},"M-14A|15":{"pts":"338.42,424.38 304.77,423.7 307.04,355.49 340.7,356.17","cx":322.73,"cy":389.93,"m2ter":118.65},"M-14A|16":{"pts":"372.24,425.19 338.42,424.38 340.7,356.17 374.51,356.98","cx":356.47,"cy":390.68,"m2ter":119.23},"M-14A|17":{"pts":"405.89,426.0 372.24,425.19 374.51,356.98 408.33,357.79","cx":390.24,"cy":391.49,"m2ter":118.95},"M-14A|19":{"pts":"473.52,427.63 439.7,426.82 441.98,358.6 475.8,359.41","cx":457.75,"cy":393.12,"m2ter":119.23},"M-14A|20":{"pts":"507.17,428.44 473.52,427.63 475.8,359.41 509.45,360.09","cx":491.48,"cy":393.89,"m2ter":118.77},"M-15|11":{"pts":"218.12,309.2 260.71,310.15 263.15,241.93 229.33,241.12 213.66,304.26","cx":236.99,"cy":281.33,"m2ter":144.04},"M-15|9":{"pts":"296.8,242.74 294.53,310.96 328.34,311.77 330.62,243.56","cx":312.57,"cy":277.26,"m2ter":119.23},"M-15|7":{"pts":"364.27,244.37 361.99,312.58 395.81,313.26 398.09,245.04","cx":380.04,"cy":278.81,"m2ter":119.22},"M-15|5":{"pts":"431.74,245.86 429.46,314.07 463.28,314.88 465.55,246.67","cx":447.51,"cy":280.37,"m2ter":119.23},"M-15|3":{"pts":"499.21,247.48 496.93,315.7 530.75,316.51 533.02,248.29","cx":514.98,"cy":281.99,"m2ter":119.23},"M-15|10":{"pts":"263.15,241.93 260.71,310.15 294.53,310.96 296.8,242.74","cx":278.8,"cy":276.45,"m2ter":118.95},"M-15|8":{"pts":"330.62,243.56 328.34,311.77 361.99,312.58 364.27,244.37","cx":346.31,"cy":278.07,"m2ter":118.66},"M-15|6":{"pts":"398.09,245.04 395.81,313.26 429.46,314.07 431.74,245.86","cx":413.77,"cy":279.56,"m2ter":118.66},"M-15|4":{"pts":"465.55,246.67 463.28,314.88 496.93,315.7 499.21,247.48","cx":481.24,"cy":281.18,"m2ter":118.66},"M-15|2":{"pts":"569.6,314.07 585.7,249.51 533.02,248.29 530.75,316.51 564.72,317.32","cx":556.76,"cy":289.14,"m2ter":159.58},"M-25A|2":{"pts":"107.24,117.82 141.06,118.63 143.66,42.29 109.84,41.62","cx":125.45,"cy":80.09,"m2ter":133.3},"M-15|18":{"pts":"506.36,247.62 508.96,171.42 475.31,170.6 472.71,246.8","cx":490.83,"cy":209.11,"m2ter":132.55},"M-15|14":{"pts":"371.42,244.5 374.02,168.17 340.21,167.49 337.61,243.69","cx":355.82,"cy":205.96,"m2ter":133.3},"M-15|16":{"pts":"441.49,169.79 438.89,245.99 405.24,245.32 407.68,168.98","cx":423.33,"cy":207.52,"m2ter":132.98},"M-15|19":{"pts":"540.18,248.43 542.78,172.23 508.96,171.42 506.36,247.62","cx":524.57,"cy":209.92,"m2ter":133.2},"M-15|17":{"pts":"472.71,246.8 475.31,170.6 441.49,169.79 438.89,245.99","cx":457.1,"cy":208.3,"m2ter":133.19},"M-15|15":{"pts":"405.24,245.32 407.68,168.98 374.02,168.17 371.42,244.5","cx":389.59,"cy":206.74,"m2ter":133.11},"M-15|13":{"pts":"337.61,243.69 340.21,167.49 306.56,166.68 303.95,242.88","cx":322.08,"cy":205.19,"m2ter":132.55},"M-25A|1-A":{"pts":"179.16,116.12 174.38,119.31 141.06,118.63 143.66,42.29 190.32,43.38 196.17,47.71 179.1,116.19","cx":171.98,"cy":86.23,"m2ter":177.9},"M-14|2":{"pts":"362.81,32.28 343.3,29.84 328.5,48.52 326.07,122.96 359.72,123.77","cx":344.08,"cy":71.48,"m2ter":154.84},"M-14|5":{"pts":"463.93,40.67 456.61,40.26 435.97,38.91 430.11,38.5 427.19,125.26 461.0,126.07","cx":445.8,"cy":68.28,"m2ter":150.5},"M-14|3":{"pts":"396.46,35.66 362.81,32.28 359.72,123.77 393.53,124.45","cx":378.13,"cy":79.04,"m2ter":157.37},"M-14|4":{"pts":"430.11,38.5 396.46,35.66 393.53,124.45 427.19,125.26","cx":411.82,"cy":80.97,"m2ter":152.84},"M-14|9":{"pts":"616.26,126.35 627.97,79.51 635.12,50.96 578.54,47.57 565.05,46.76 562.29,128.38 611.38,129.59","cx":599.52,"cy":87.02,"m2ter":256.32},"M-14|7":{"pts":"528.47,127.7 531.23,44.73 507.17,43.24 497.58,42.7 494.82,126.89","cx":511.86,"cy":77.05,"m2ter":145.5},"M-14|6":{"pts":"463.93,40.67 461.0,126.07 494.82,126.89 497.58,42.7 471.57,41.21","cx":477.78,"cy":75.51,"m2ter":147.88},"M-14|8":{"pts":"531.23,44.73 528.47,127.7 562.29,128.38 565.05,46.76 542.78,45.41","cx":545.96,"cy":78.59,"m2ter":143.93},"M-15|12":{"pts":"257.53,168.37 262.17,165.6 306.56,166.68 303.95,242.88 296.8,242.74 263.15,241.93 236.81,241.39 239.09,235.57 232.26,233.81 243.31,204.71 257.46,168.44","cx":263.55,"cy":210.19,"m2ter":238.9},"M-15|1":{"pts":"601.0,187.58 587.32,173.18 542.78,172.23 540.18,248.43 578.38,249.24 580.01,242.34 587.16,243.56 600.98,187.66","cx":577.23,"cy":213.03,"m2ter":202.48}};
+var A1=["Trazo y nivelación", "Excavación", "Cimentación", "Muros", "Losa / techo", "Instalaciones", "Acabados", "Entrega"];
+var A2=["Trazo y nivelación", "Excavación", "Cimentación", "Muros nivel 1", "Losa entrepiso", "Escalera", "Muros nivel 2", "Losa azotea", "Instalaciones", "Acabados", "Entrega"];
+
+var FILL={Disponible:"#63991a",Vendida:"#7ec8e3",Entregada:"#F4D03F"};
+var STR={No_Iniciada:"#8a8a8a",En_Proceso:"#c2185b"};
+var MZS={campello:["880","881","882"],campina:["M-25A","M-14","M-14B","M-14A","M-15"]};
+var SNMS={campello:"Campello",campina:"Paseo_Montesinos"};
+var sec="campello",mz="all",sel=null,curL=null,lotes=[];
+var layer=document.getElementById("layer");
+var tip=document.getElementById("tip");
+var plano=document.getElementById("plano");
+var bg=document.getElementById("bg");
+
+function parseCSV(txt){
+  var lines=txt.trim().split("\n");
+  var hdrs=lines[0].split(",").map(function(h){return h.replace(/"/g,"").trim();});
+  return lines.slice(1).map(function(line){
+    var vals=[],cur="",q=false;
+    for(var i=0;i<line.length;i++){
+      var c=line[i];
+      if(c==='"'){q=!q;}
+      else if(c===","&&!q){vals.push(cur.replace(/"/g,"").trim());cur="";}
+      else cur+=c;
+    }
+    vals.push(cur.replace(/"/g,"").trim());
+    var o={};
+    hdrs.forEach(function(h,i){o[h]=vals[i]||"";});
+    return o;
+  });
+}
+
+function actIdx(av,n){
+  var on=n-3,steps=[],acc=0;
+  for(var i=0;i<on;i++){steps.push([acc,acc+55/on]);acc+=55/on;}
+  acc=55;
+  for(var i=0;i<3;i++){steps.push([acc,acc+15]);acc+=15;}
+  for(var i=0;i<steps.length;i++){if(av<=steps[i][1])return i;}
+  return n-1;
+}
+
+function mkLote(r){
+  var s=r.Seccion||"";
+  var mzana=(r.Manzana||"").toString().trim();
+  var lot=(r.Lote_real||"").toString().trim();
+  var key=mzana+"|"+lot;
+  var geo=s==="Campello"?GC[key]:GM[key];
+  if(!geo)return null;
+  var av=parseInt(r.Avance)||0;
+  var tv=parseInt(r.Tipo_vivienda)||1;
+  var na=tv===2?A2.length:A1.length;
+  var eo=(r.Estatus_Obra||"No Iniciada").trim();
+  var eor=eo.replace(/\s+/g,"_");
+  var ent=(r.Entrega_Confirmada||"").toUpperCase()==="SI";
+  return{id:mzana+"_"+lot,lote:lot,mz:mzana,sec:s,
+    calle:r.Calle||"",modelo:r.Modelo||"",fachada:r.Fachada||"",
+    tv:tv,m2t:parseFloat(r.M2_Terreno||geo.m2ter||0),m2c:parseFloat(r.M2_construccion||0),
+    ev:r.Estatus_Ventas||"Disponible",eo:eo,eor:eor,
+    av:av,ai:av>0?actIdx(av,na):0,
+    fav:r.Fecha_Avance||"—",faval:r.Fecha_Avaluo||"—",
+    cliente:r.Nombre_Cliente||"",ent:ent,obs:r.Observaciones||"",
+    foto:r.Ruta_Foto||"",pts:geo.pts,cx:geo.cx,cy:geo.cy};
+}
+
+async function loadSheet(){
+  var badge=document.getElementById("sync");
+  badge.textContent="⟳ Cargando...";badge.style.background="#f0efe9";badge.style.color="#888";
+  var txt=null;
+  var proxies=[CSV+"&t="+Date.now(),
+    "https://corsproxy.io/?"+encodeURIComponent(CSV),
+    "https://api.allorigins.win/raw?url="+encodeURIComponent(CSV)];
+  for(var i=0;i<proxies.length;i++){
+    try{var r=await fetch(proxies[i]);if(r.ok){txt=await r.text();break;}}
+    catch(e){console.log("proxy "+i+" fallo");}
+  }
+  if(txt){
+    lotes=parseCSV(txt).map(mkLote).filter(Boolean);
+    badge.textContent="● En vivo";badge.style.background="#EAF3DE";badge.style.color="#1D9E75";
+    render();
+  }else{
+    badge.textContent="⚠ Sin conexión";badge.style.background="#fdecea";badge.style.color="#e74c3c";
+  }
+}
+
+function metrics(ls){
+  var d=0,v=0,ni=0,ep=0,ent=0,sa=0,ca=0;
+  ls.forEach(function(l){
+    if(l.ent)ent++;
+    if(l.ev==="Disponible")d++;else v++;
+    if(l.eor==="No_Iniciada")ni++;else{ep++;sa+=l.av;ca++;}
+  });
+  return{tot:ls.length,d:d,v:v,ni:ni,ep:ep,ent:ent,avg:ca?Math.round(sa/ca):0};
+}
+
+function renderBoards(ls){
+  var m=metrics(ls);
+  var eb=m.ent>0?'<div style="font-size:10px;background:#FCF3CF;color:#9A7D0A;border-radius:8px;padding:2px 8px;margin-top:4px;">&#10003; '+m.ent+' entregada'+(m.ent>1?'s':'')+'</div>':'';
+  document.getElementById("boards").innerHTML=
+    '<div class="board center"><div class="big">'+m.tot+'</div><div class="lbl">Total lotes</div>'+eb+'</div>'+
+    '<div class="board"><div class="board-title"><span class="dot" style="background:#0E6488"></span>Ventas</div>'+
+    '<div class="stats">'+
+    '<div class="stat"><div class="stat-val" style="color:#3B6D11">'+m.d+'</div><div class="stat-lbl">Disponible</div></div>'+
+    '<div class="stat"><div class="stat-val" style="color:#0E6488">'+m.v+'</div><div class="stat-lbl">Vendida</div></div>'+
+    '</div></div>'+
+    '<div class="board"><div class="board-title"><span class="dot" style="background:#AD1457"></span>Obra</div>'+
+    '<div class="stats">'+
+    '<div class="stat"><div class="stat-val" style="color:#888">'+m.ni+'</div><div class="stat-lbl">No iniciada</div></div>'+
+    '<div class="stat"><div class="stat-val" style="color:#AD1457">'+m.ep+'</div><div class="stat-lbl">En proceso</div></div>'+
+    '</div><div class="bfoot"><span>Avance prom.</span><b>'+m.avg+'%</b></div></div>';
+}
+
+function renderMzBar(){
+  var mzs=MZS[sec];
+  var h='<button class="mb active" data-mz="all" onclick="setMz(this)">Todas</button>';
+  mzs.forEach(function(z){h+='<button class="mb" data-mz="'+z+'" onclick="setMz(this)">Mz '+z+'</button>';});
+  document.getElementById("mzbar").innerHTML=h;
+}
+
+function getLotes(){return lotes.filter(function(l){return l.sec===SNMS[sec];});}
+
+function render(){
+  var ls=getLotes();
+  document.getElementById("sub").textContent=(sec==="campello"?"Sección Campello":"Paseo Montesinos")+" · "+ls.length+" lotes";
+  renderBoards(ls);build();
+}
+
+function build(){
+  layer.innerHTML="";
+  var ls=getLotes();
+  ls.forEach(function(l){
+    if(mz!=="all"&&l.mz!==mz)return;
+    var poly=document.createElementNS("http://www.w3.org/2000/svg","polygon");
+    poly.setAttribute("points",l.pts);
+    var fk=l.ent?"Entregada":l.ev;
+    poly.setAttribute("fill",FILL[fk]||"#63991a");
+    poly.setAttribute("fill-opacity","0.78");
+    poly.setAttribute("stroke",STR[l.eor]||"#8a8a8a");
+    poly.setAttribute("stroke-width","2");
+    poly.setAttribute("class","lote");
+    poly.dataset.id=l.id;
+    var txt=document.createElementNS("http://www.w3.org/2000/svg","text");
+    txt.setAttribute("x",l.cx);txt.setAttribute("y",l.cy+3);
+    txt.setAttribute("text-anchor","middle");txt.setAttribute("font-size","7");
+    txt.setAttribute("fill","#fff");txt.setAttribute("font-weight","700");
+    txt.setAttribute("pointer-events","none");
+    txt.textContent=l.lote;
+    (function(lo,po){
+      po.addEventListener("mouseenter",function(e){
+        if(sel!==lo.id)po.setAttribute("fill-opacity","0.95");
+        var pr=plano.parentElement.getBoundingClientRect();
+        tip.style.left=(e.clientX-pr.left+12)+"px";
+        tip.style.top=(e.clientY-pr.top+12)+"px";
+        tip.style.display="block";
+        tip.innerHTML="<b>L"+lo.lote+" · Mz "+lo.mz+"</b> "+lo.modelo+" "+lo.fachada+" · "+(lo.ent?"Entregada":lo.ev)+" · "+lo.eo;
+      });
+      po.addEventListener("mousemove",function(e){
+        var pr=plano.parentElement.getBoundingClientRect();
+        tip.style.left=(e.clientX-pr.left+12)+"px";
+        tip.style.top=(e.clientY-pr.top+12)+"px";
+      });
+      po.addEventListener("mouseleave",function(){
+        if(sel!==lo.id)po.setAttribute("fill-opacity","0.78");
+        tip.style.display="none";
+      });
+      po.addEventListener("click",function(){showFicha(lo,po);});
+    })(l,poly);
+    layer.appendChild(poly);layer.appendChild(txt);
+  });
+}
+
+function switchSec(s){
+  sec=s;mz="all";sel=null;curL=null;
+  document.getElementById("tab-c").classList.toggle("active",s==="campello");
+  document.getElementById("tab-m").classList.toggle("active",s==="campina");
+  setTimeout(function(){bg.setAttribute("href",s==="campello"?"plano_campello.svg":"plano_campina.svg");},50);
+  renderMzBar();render();
+  document.getElementById("panel").innerHTML='<div class="hint">Selecciona un lote</div>';
+}
+
+function setMz(btn){
+  mz=btn.dataset.mz;sel=null;
+  document.querySelectorAll(".mb").forEach(function(b){b.classList.remove("active");});
+  btn.classList.add("active");
+  document.getElementById("panel").innerHTML='<div class="hint">Selecciona un lote</div>';
+  build();
+}
+
+function showFicha(l,poly){
+  if(sel)layer.querySelectorAll(".lote").forEach(function(p){
+    if(p.dataset.id===sel){p.setAttribute("fill-opacity","0.78");p.classList.remove("sel");}
+  });
+  sel=l.id;curL=l;poly.classList.add("sel");poly.setAttribute("fill-opacity","1");
+  var ACTS=l.tv===2?A2:A1;
+  var hasObra=l.eor==="En_Proceso";
+  var slbl=l.ent?"Entregada":l.ev;
+  var vbc=l.ent?"bent":(l.ev==="Vendida"?"bvd":"bv");
+  var obc=l.eor==="En_Proceso"?"bep":"bni";
+  var acts="";
+  ACTS.forEach(function(a,i){
+    var cls=i<l.ai?"ad":(i===l.ai&&hasObra?"aa":"ap");
+    var lb=i<l.ai?'<span style="margin-left:auto;color:#aaa;font-size:10px">&#10003;</span>':
+      (i===l.ai&&hasObra?'<span style="margin-left:auto;color:#7f77dd;font-size:10px">'+(l.obs||"en proceso")+"</span>":"");
+    acts+='<div class="act"><div class="act-dot '+cls+'"></div><span>'+a+'</span>'+lb+'</div>';
+  });
+  var cliS="";
+  if(l.ev==="Vendida"){
+    cliS='<div class="sec"><div class="sec-t">Cliente</div>'+
+      '<div class="row"><span class="rl">Nombre</span><span class="rv">'+(l.cliente||"—")+'</span></div>'+
+      '<div class="row"><span class="rl">Entrega confirmada</span>'+
+      '<span class="badge '+(l.ent?"bent":"bni")+'">'+(l.ent?"&#10003; Sí":"No")+'</span></div></div>';
+  }
+  var obraS="";
+  if(hasObra){
+    obraS='<div class="sec"><div class="sec-t">Avance de obra</div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:2px;"><span>Progreso</span><b style="color:#534AB7">'+l.av+'%</b></div>'+
+      '<div class="pb-bg"><div class="pb-fill" style="width:'+l.av+'%"></div></div>'+
+      '<div class="row" style="margin-top:6px"><span class="rl">Últ. actualización</span><span class="rv">'+l.fav+'</span></div></div>'+
+      '<div class="sec"><div class="sec-t">Actividades</div>'+acts+'</div>'+
+      '<div class="sec"><div class="sec-t">Foto de avance</div>'+
+      (l.foto?'<img src="'+l.foto+'" style="width:100%;border-radius:8px;border:1px solid #ddd;margin-bottom:6px;">':'')+
+      '<div class="fbox" onclick="document.getElementById(\'foto-input\').click()">&#128247; Tomar / subir foto</div>'+
+      '<div id="fst" style="font-size:11px;color:#888;text-align:center;margin-top:4px;display:none;"></div></div>';
+  }else{
+    obraS='<div class="sec"><div class="sec-t">Obra</div><div style="font-size:12px;color:#aaa;padding:6px 0">Sin obra iniciada</div></div>';
+  }
+  document.getElementById("panel").innerHTML=
+    '<div class="fh">'+
+    '<div><div class="ft">Lote '+l.lote+' — Mz '+l.mz+'</div><div class="fs">'+l.calle+'</div></div>'+
+    '<div class="badges"><span class="badge '+vbc+'">'+slbl+'</span><span class="badge '+obc+'">'+l.eo+'</span></div>'+
+    '</div>'+
+    '<div class="sec"><div class="sec-t">Identificación</div>'+
+    '<div class="row"><span class="rl">Lote / Manzana</span><span class="rv">'+l.lote+' / '+l.mz+'</span></div>'+
+    '<div class="row"><span class="rl">Calle</span><span class="rv">'+l.calle+'</span></div>'+
+    '<div class="row"><span class="rl">Fecha avalúo</span><span class="rv">'+l.faval+'</span></div></div>'+
+    cliS+
+    '<div class="sec"><div class="sec-t">Vivienda</div>'+
+    '<div class="row"><span class="rl">Modelo</span><span class="rv">'+l.modelo+'</span></div>'+
+    '<div class="row"><span class="rl">Fachada</span><span class="rv">'+l.fachada+'</span></div>'+
+    '<div class="row"><span class="rl">Niveles</span><span class="rv">'+l.tv+' nivel'+(l.tv===2?'es':'')+'</span></div>'+
+    '<div class="row"><span class="rl">Sup. terreno</span><span class="rv">'+l.m2t+' m²</span></div>'+
+    '<div class="row"><span class="rl">Sup. construcción</span><span class="rv">'+l.m2c+' m²</span></div></div>'+
+    obraS+
+    '<button class="btn" onclick="loadSheet()">&#8635; Refrescar</button>'+
+    '<button class="btn btnp" onclick="abrirModal()">&#9998; Actualizar ficha</button>';
+}
+
+function abrirModal(){
+  if(!curL)return;
+  document.getElementById("mdl-t").textContent="Lote "+curL.lote+" — Mz "+curL.mz;
+  document.getElementById("e-venta").value=curL.ev;
+  document.getElementById("e-obra").value=curL.eo;
+  document.getElementById("e-avance").value=curL.av;
+  document.getElementById("e-cliente").value=curL.cliente||"";
+  document.getElementById("e-entrega").value=curL.ent?"Si":"No";
+  document.getElementById("e-obs").value=curL.obs||"";
+  document.getElementById("modal").style.display="flex";
+}
+
+function cerrarModal(){document.getElementById("modal").style.display="none";}
+
+async function guardar(){
+  var l=curL;if(!l)return;
+  var btn=document.getElementById("btn-save");
+  btn.textContent="⟳ Guardando...";btn.disabled=true;
+  var p={seccion:l.sec,manzana:l.mz,lote:l.lote,
+    Estatus_Ventas:document.getElementById("e-venta").value,
+    Estatus_Obra:document.getElementById("e-obra").value,
+    Avance:parseInt(document.getElementById("e-avance").value)||0,
+    Nombre_Cliente:document.getElementById("e-cliente").value,
+    Entrega_Confirmada:document.getElementById("e-entrega").value,
+    Observaciones:document.getElementById("e-obs").value,
+    Fecha_Avance:new Date().toLocaleDateString("es-MX")};
+  try{
+    var r=await fetch(API,{method:"POST",body:JSON.stringify(p)});
+    var res=await r.json();
+    if(res.ok){cerrarModal();setTimeout(loadSheet,800);alert("✅ Guardado correctamente");}
+    else alert("Error: "+(res.error||"No se pudo guardar"));
+  }catch(e){alert("Error de conexión: "+e.message);}
+  btn.textContent="💾 Guardar";btn.disabled=false;
+}
+
+function subirFoto(input){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];
+  var st=document.getElementById("fst");
+  if(st){st.style.display="block";st.textContent="⟳ Subiendo foto...";}
+  var reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      var r=await fetch(API,{method:"POST",body:JSON.stringify({
+        tipo:"foto",seccion:curL.sec,manzana:curL.mz,lote:curL.lote,
+        imagen:e.target.result,mimeType:file.type})});
+      var res=await r.json();
+      if(res.ok){if(st){st.textContent="✅ Foto guardada";st.style.color="#1D9E75";}}
+      else{if(st){st.textContent="Error: "+(res.error||"fallo");st.style.color="#e74c3c";}}
+    }catch(err){if(st){st.textContent="Error de conexión";st.style.color="#e74c3c";}}
+  };
+  reader.readAsDataURL(file);
+}
+
+bg.setAttribute("href","plano_campello.svg");
+renderMzBar();
+loadSheet();
+
+</script></body></html>
