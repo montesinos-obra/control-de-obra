@@ -76,13 +76,35 @@ polygon.lote{cursor:pointer;}polygon.lote.sel{stroke-width:3.5!important;fill-op
   .pw{height:60vw;min-height:260px;}
   .panel{border-left:none;border-top:1px solid #e5e4e0;}
 }
+
+.login-bar{display:flex;align-items:center;gap:8px;}
+.user-badge{font-size:11px;padding:4px 10px;background:#EAF3DE;color:#3B6D11;border-radius:20px;font-weight:600;}
+.login-btn{padding:6px 14px;border-radius:8px;border:1px solid #534AB7;background:#534AB7;color:#fff;font-size:12px;cursor:pointer;}
+.logout-btn{padding:6px 14px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#888;font-size:12px;cursor:pointer;}
+.login-modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center;}
+.login-modal{background:#fff;border-radius:12px;padding:28px;width:90%;max-width:340px;}
+.login-modal h2{font-size:16px;font-weight:700;margin-bottom:6px;color:#111;}
+.login-modal p{font-size:12px;color:#888;margin-bottom:18px;}
+.login-field{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;}
+.login-field label{font-size:11px;color:#888;font-weight:700;text-transform:uppercase;}
+.login-field input{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;}
+.login-error{color:#e74c3c;font-size:12px;margin-top:-8px;margin-bottom:10px;display:none;}
+.login-submit{width:100%;padding:11px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+.login-submit:hover{background:#4339a0;}
 </style></head><body>
 <div class="topbar">
   <div>
     <h1>&#127968; Residencial Montesinos <span class="sync" id="sync">&#9675; Cargando...</span></h1>
     <div style="font-size:11px;color:#888;" id="sub">Cargando...</div>
   </div>
-  <button class="btn" style="width:auto;padding:6px 12px;margin-top:0;" onclick="loadSheet()">&#8635; Actualizar</button>
+  <div class="login-bar">
+    <div id="user-info" style="display:none;">
+      <span class="user-badge" id="user-badge">&#128100; Editor</span>
+      <button class="logout-btn" onclick="cerrarSesion()">Salir</button>
+    </div>
+    <button class="login-btn" id="login-btn" onclick="abrirLogin()">&#128274; Modo editor</button>
+    <button class="btn" style="width:auto;padding:6px 12px;margin-top:0;" onclick="loadSheet()">&#8635; Actualizar</button>
+  </div>
 </div>
 <div class="tabs">
   <div class="tab active" id="tab-c" onclick="switchSec('campello')">Secci&#243;n Campello</div>
@@ -357,7 +379,7 @@ function showFicha(l,poly){
       '<div class="sec"><div class="sec-t">Actividades</div>'+acts+'</div>'+
       '<div class="sec"><div class="sec-t">Foto de avance</div>'+
       (l.foto?'<img src="'+l.foto+'" style="width:100%;border-radius:8px;border:1px solid #ddd;margin-bottom:6px;">':'')+
-      '<div class="fbox" onclick="document.getElementById(\'foto-input\').click()">&#128247; Tomar / subir foto</div>'+
+      (editorActivo?'<div class="fbox" onclick="document.getElementById(\'foto-input\').click()">&#128247; Tomar / subir foto</div>':"<div style=\"font-size:12px;color:#aaa;padding:6px 0;\">Solo editores pueden subir fotos</div>")+
       '<div id="fst" style="font-size:11px;color:#888;text-align:center;margin-top:4px;display:none;"></div></div>';
   }else{
     obraS='<div class="sec"><div class="sec-t">Obra</div><div style="font-size:12px;color:#aaa;padding:6px 0">Sin obra iniciada</div></div>';
@@ -380,7 +402,7 @@ function showFicha(l,poly){
     '<div class="row"><span class="rl">Sup. construcción</span><span class="rv">'+l.m2c+' m²</span></div></div>'+
     obraS+
     '<button class="btn" onclick="loadSheet()">&#8635; Refrescar</button>'+
-    '<button class="btn btnp" onclick="abrirModal()">&#9998; Actualizar ficha</button>';
+    (editorActivo?'<button class="btn btnp" onclick="abrirModal()">&#9998; Actualizar ficha</button>':'');
 }
 
 function abrirModal(){
@@ -437,8 +459,64 @@ function subirFoto(input){
   reader.readAsDataURL(file);
 }
 
+
+// === CONTROL DE ACCESO ===
+var CLAVES = {"9288hmoE-4.6#":"Editor A","0376hmoE-4.6#":"Editor B"};
+var editorActivo = false;
+
+function abrirLogin(){
+  document.getElementById("login-modal").style.display="flex";
+  document.getElementById("login-clave").value="";
+  document.getElementById("login-error").style.display="none";
+  setTimeout(function(){document.getElementById("login-clave").focus();},100);
+}
+
+function cerrarLogin(){
+  document.getElementById("login-modal").style.display="none";
+}
+
+function verificarClave(){
+  var clave = document.getElementById("login-clave").value.trim();
+  if(CLAVES[clave]){
+    editorActivo = true;
+    var nombre = CLAVES[clave];
+    document.getElementById("user-badge").textContent = "&#128100; " + nombre;
+    document.getElementById("user-info").style.display = "flex";
+    document.getElementById("login-btn").style.display = "none";
+    cerrarLogin();
+    // Refrescar ficha si hay una abierta
+    if(curL) showFicha(curL, document.querySelector(".lote.sel"));
+  } else {
+    document.getElementById("login-error").style.display = "block";
+    document.getElementById("login-clave").value = "";
+    document.getElementById("login-clave").focus();
+  }
+}
+
+function cerrarSesion(){
+  editorActivo = false;
+  document.getElementById("user-info").style.display = "none";
+  document.getElementById("login-btn").style.display = "block";
+  if(curL) showFicha(curL, document.querySelector(".lote.sel"));
+}
+// === FIN CONTROL DE ACCESO ===
+
 bg.setAttribute("href","plano_campello.svg");
 renderMzBar();
 loadSheet();
 
-</script></body></html>
+</script>
+<div class="login-modal-bg" id="login-modal">
+  <div class="login-modal">
+    <h2>&#128274; Acceso de editor</h2>
+    <p>Ingresa tu clave para activar el modo de edici&#243;n</p>
+    <div class="login-field">
+      <label>Clave de acceso</label>
+      <input type="password" id="login-clave" placeholder="Ingresa tu clave" onkeydown="if(event.key==='Enter')verificarClave()">
+    </div>
+    <div class="login-error" id="login-error">Clave incorrecta. Int&#233;ntalo de nuevo.</div>
+    <button class="login-submit" onclick="verificarClave()">Entrar</button>
+    <button class="btn" style="margin-top:8px;" onclick="cerrarLogin()">Cancelar</button>
+  </div>
+</div>
+</body></html>
