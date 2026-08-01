@@ -91,6 +91,24 @@ polygon.lote{cursor:pointer;}polygon.lote.sel{stroke-width:3.5!important;fill-op
 .login-error{color:#e74c3c;font-size:12px;margin-top:-8px;margin-bottom:10px;display:none;}
 .login-submit{width:100%;padding:11px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
 .login-submit:hover{background:#4339a0;}
+
+.rpt-menu-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center;}
+.rpt-menu{background:#fff;border-radius:12px;padding:24px;width:90%;max-width:360px;}
+.rpt-menu h2{font-size:16px;font-weight:700;margin-bottom:6px;color:#111;}
+.rpt-menu p{font-size:12px;color:#888;margin-bottom:18px;}
+.rpt-opt{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e5e4e0;border-radius:10px;cursor:pointer;margin-bottom:10px;transition:all .15s;}
+.rpt-opt:hover{background:#f5f4f0;border-color:#534AB7;}
+.rpt-opt-icon{font-size:22px;}
+.rpt-opt-title{font-size:13px;font-weight:600;color:#111;}
+.rpt-opt-sub{font-size:11px;color:#888;margin-top:2px;}
+@media print{
+  .topbar,.tabs,.boards,.ctrl,.mzbar,.panel,.tip,.mbg,.login-modal-bg,.rpt-menu-bg{display:none!important;}
+  .main{display:block!important;height:auto!important;}
+  .pw{height:auto!important;}
+  body{background:#fff!important;}
+  .rpt-print{display:block!important;}
+}
+.rpt-print{display:none;}
 </style></head><body>
 <div class="topbar">
   <div>
@@ -103,7 +121,9 @@ polygon.lote{cursor:pointer;}polygon.lote.sel{stroke-width:3.5!important;fill-op
       <button class="logout-btn" onclick="cerrarSesion()">Salir</button>
     </div>
     <button class="login-btn" id="login-btn" onclick="abrirLogin()">&#128274; Modo editor</button>
+    <button class="btn" style="width:auto;padding:6px 12px;margin-top:0;" onclick="abrirReportes()">&#128196; Reportes</button>
     <button class="btn" style="width:auto;padding:6px 12px;margin-top:0;" onclick="loadSheet()">&#8635; Actualizar</button>
+    <button class="btn" style="width:auto;padding:6px 12px;margin-top:0;background:#f5f4f0;color:#888;border-color:#ddd;" onclick="salirApp()">&#10005; Salir</button>
   </div>
 </div>
 <div class="tabs">
@@ -501,6 +521,245 @@ function cerrarSesion(){
 }
 // === FIN CONTROL DE ACCESO ===
 
+
+// === REPORTES PDF ===
+function abrirReportes(){ document.getElementById("rpt-menu").style.display="flex"; }
+function cerrarReportes(){ document.getElementById("rpt-menu").style.display="none"; }
+
+function fmtDate(){ return new Date().toLocaleDateString("es-MX",{year:"numeric",month:"long",day:"numeric"}); }
+
+function headerRpt(titulo, subtitulo){
+  return '<div style="border-bottom:3px solid #534AB7;padding-bottom:12px;margin-bottom:20px;">'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'+
+    '<div>'+
+    '<div style="font-size:20px;font-weight:700;color:#534AB7;">Residencial Montesinos</div>'+
+    '<div style="font-size:14px;color:#111;font-weight:600;margin-top:2px;">'+titulo+'</div>'+
+    '<div style="font-size:11px;color:#888;margin-top:2px;">'+subtitulo+'</div>'+
+    '</div>'+
+    '<div style="text-align:right;font-size:11px;color:#888;">'+
+    '<div>Fecha: '+fmtDate()+'</div>'+
+    '</div>'+
+    '</div></div>';
+}
+
+function badgeHtml(txt, color, bg){
+  return '<span style="font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700;background:'+bg+';color:'+color+';">'+txt+'</span>';
+}
+
+function generarReporteLote(){
+  cerrarReportes();
+  if(!curL){ alert("Primero selecciona un lote en el plano"); return; }
+  var l = curL;
+  var ACTS = l.tv===2?A2:A1;
+  var slbl = l.ent?"Entregada":l.ev;
+  var vcolor = l.ent?"#9A7D0A":(l.ev==="Vendida"?"#0E6488":"#3B6D11");
+  var vbg = l.ent?"#FCF3CF":(l.ev==="Vendida"?"#E1F0F8":"#EAF3DE");
+  var ocolor = l.eor==="En_Proceso"?"#AD1457":"#666";
+  var obg = l.eor==="En_Proceso"?"#FCE4EC":"#EFEFEF";
+
+  var actsHtml = ACTS.map(function(a,i){
+    var done = i < l.ai;
+    var curr = i === l.ai && l.eor==="En_Proceso";
+    var icon = done?"✓":(curr?"▶":"○");
+    var color = done?"#1D9E75":(curr?"#534AB7":"#aaa");
+    return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f5f5f5;">'+
+      '<span style="color:'+color+';font-weight:700;width:16px;">'+icon+'</span>'+
+      '<span style="font-size:12px;color:'+(done?"#555":(curr?"#111":"#aaa"))+';">'+a+'</span>'+
+      (curr?'<span style="margin-left:auto;font-size:11px;color:#534AB7;">'+(l.obs||"en proceso")+'</span>':'')+
+      (done?'<span style="margin-left:auto;font-size:11px;color:#1D9E75;">Completado</span>':'')+
+      '</div>';
+  }).join('');
+
+  var fotoHtml = l.foto?'<div style="margin-top:16px;"><div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px;">FOTO DE AVANCE</div><img src="'+l.foto+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;border:1px solid #ddd;"></div>':'';
+
+  var html = '<html><head><meta charset="UTF-8">'+
+    '<title>Reporte Lote '+l.lote+' Mz'+l.mz+'</title>'+
+    '<style>*{box-sizing:border-box;font-family:system-ui,sans-serif;}body{margin:20px;color:#111;}table{width:100%;border-collapse:collapse;}td{padding:6px 10px;font-size:12px;}tr:nth-child(even){background:#f9f9f9;}.no-print{display:none;}@media print{.no-print{display:none!important;}}</style>'+
+    '</head><body>'+
+    headerRpt('Ficha de Lote','Lote '+l.lote+' — Manzana '+l.mz+' — '+l.calle)+
+    '<div style="display:flex;gap:8px;margin-bottom:20px;">'+
+      badgeHtml(slbl, vcolor, vbg)+' '+
+      badgeHtml(l.eo, ocolor, obg)+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">'+
+    '<div>'+
+    '<div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:8px;">DATOS DEL LOTE</div>'+
+    '<table><tr><td style="color:#888;">Lote / Manzana</td><td><b>'+l.lote+' / '+l.mz+'</b></td></tr>'+
+    '<tr><td style="color:#888;">Calle</td><td>'+l.calle+'</td></tr>'+
+    '<tr><td style="color:#888;">Modelo</td><td>'+l.modelo+'</td></tr>'+
+    '<tr><td style="color:#888;">Fachada</td><td>'+l.fachada+'</td></tr>'+
+    '<tr><td style="color:#888;">Niveles</td><td>'+l.tv+' nivel'+(l.tv===2?'es':'')+'</td></tr>'+
+    '<tr><td style="color:#888;">Sup. terreno</td><td>'+l.m2t+' m²</td></tr>'+
+    '<tr><td style="color:#888;">Sup. construcción</td><td>'+l.m2c+' m²</td></tr>'+
+    '<tr><td style="color:#888;">Fecha avalúo</td><td>'+l.faval+'</td></tr>'+
+    (l.ev==="Vendida"?'<tr><td style="color:#888;">Cliente</td><td><b>'+(l.cliente||'—')+'</b></td></tr>':'')+
+    '</table></div>'+
+    '<div>'+
+    '<div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:8px;">AVANCE DE OBRA</div>'+
+    '<div style="font-size:28px;font-weight:700;color:#534AB7;margin-bottom:8px;">'+l.av+'%</div>'+
+    '<div style="background:#eee;border-radius:6px;height:10px;overflow:hidden;margin-bottom:16px;">'+
+    '<div style="height:10px;border-radius:6px;background:linear-gradient(90deg,#534AB7,#7f77dd);width:'+l.av+'%;"></div></div>'+
+    '<div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px;">ACTIVIDADES</div>'+
+    actsHtml+
+    '</div></div>'+
+    fotoHtml+
+    '<div style="margin-top:30px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#aaa;text-align:center;">'+
+    'Residencial Montesinos — Reporte generado el '+fmtDate()+'</div>'+
+    '<div class="no-print" style="margin-top:20px;text-align:center;">'+
+    '<button onclick="window.print()" style="padding:10px 24px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">&#128196; Imprimir / Guardar PDF</button>'+
+    '</div></body></html>';
+
+  var w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+function generarReporteManzana(){
+  cerrarReportes();
+  var ls = getLotes().filter(function(l){ return mz==="all" || l.mz===mz; });
+  if(ls.length===0){ alert("No hay lotes para mostrar"); return; }
+  var titulo = mz==="all"?"Todas las Manzanas":"Manzana "+mz;
+  var secNom = sec==="campello"?"Sección Campello":"Paseo Montesinos";
+
+  var totalD=0,totalV=0,totalEP=0,totalNI=0,sumAv=0,cntAv=0;
+  ls.forEach(function(l){
+    if(l.ev==="Disponible")totalD++;else totalV++;
+    if(l.eor==="En_Proceso"){totalEP++;sumAv+=l.av;cntAv++;}else totalNI++;
+  });
+  var avgAv = cntAv?Math.round(sumAv/cntAv):0;
+
+  var filas = ls.map(function(l){
+    var slbl=l.ent?"Entregada":l.ev;
+    return '<tr>'+
+      '<td style="font-weight:600;">L'+l.lote+'</td>'+
+      '<td>'+l.mz+'</td>'+
+      '<td>'+l.calle+'</td>'+
+      '<td>'+l.modelo+'</td>'+
+      '<td>'+slbl+'</td>'+
+      '<td>'+l.eo+'</td>'+
+      '<td style="font-weight:600;color:#534AB7;text-align:center;">'+l.av+'%</td>'+
+      '<td>'+(l.cliente||'—')+'</td>'+
+      '</tr>';
+  }).join('');
+
+  var html = '<html><head><meta charset="UTF-8">'+
+    '<title>Reporte '+titulo+'</title>'+
+    '<style>*{box-sizing:border-box;font-family:system-ui,sans-serif;}body{margin:20px;color:#111;}'+
+    'table{width:100%;border-collapse:collapse;font-size:11px;}th{background:#534AB7;color:#fff;padding:8px;text-align:left;}'+
+    'td{padding:6px 8px;border-bottom:1px solid #f0f0f0;}tr:hover{background:#f9f9f9;}'+
+    '.card{background:#f9f9f9;border-radius:8px;padding:12px;text-align:center;}'+
+    '.card-val{font-size:24px;font-weight:700;}.card-lbl{font-size:11px;color:#888;margin-top:2px;}'+
+    '@media print{button{display:none!important;}}</style>'+
+    '</head><body>'+
+    headerRpt('Reporte por Manzana — '+titulo, secNom+' · '+ls.length+' lotes')+
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px;">'+
+    '<div class="card"><div class="card-val">'+ls.length+'</div><div class="card-lbl">Total</div></div>'+
+    '<div class="card"><div class="card-val" style="color:#3B6D11;">'+totalD+'</div><div class="card-lbl">Disponible</div></div>'+
+    '<div class="card"><div class="card-val" style="color:#0E6488;">'+totalV+'</div><div class="card-lbl">Vendida</div></div>'+
+    '<div class="card"><div class="card-val" style="color:#AD1457;">'+totalEP+'</div><div class="card-lbl">En proceso</div></div>'+
+    '<div class="card"><div class="card-val" style="color:#534AB7;">'+avgAv+'%</div><div class="card-lbl">Avance prom.</div></div>'+
+    '</div>'+
+    '<table><tr><th>Lote</th><th>Manzana</th><th>Calle</th><th>Modelo</th><th>Venta</th><th>Obra</th><th>Avance</th><th>Cliente</th></tr>'+
+    filas+'</table>'+
+    '<div style="margin-top:30px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#aaa;text-align:center;">'+
+    'Residencial Montesinos — Reporte generado el '+fmtDate()+'</div>'+
+    '<div style="margin-top:20px;text-align:center;">'+
+    '<button onclick="window.print()" style="padding:10px 24px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">&#128196; Imprimir / Guardar PDF</button>'+
+    '</div></body></html>';
+
+  var w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+function generarReporteGeneral(){
+  cerrarReportes();
+  var lsCamp = lotes.filter(function(l){return l.sec==="Campello";});
+  var lsCamp2 = lotes.filter(function(l){return l.sec==="Paseo_Montesinos";});
+
+  function resumen(ls){
+    var d=0,v=0,ni=0,ep=0,ent=0,sa=0,ca=0;
+    ls.forEach(function(l){
+      if(l.ent)ent++;
+      if(l.ev==="Disponible")d++;else v++;
+      if(l.eor==="No_Iniciada")ni++;else{ep++;sa+=l.av;ca++;}
+    });
+    return{tot:ls.length,d:d,v:v,ni:ni,ep:ep,ent:ent,avg:ca?Math.round(sa/ca):0};
+  }
+
+  var rc = resumen(lsCamp);
+  var rm = resumen(lsCamp2);
+  var rtot = {
+    tot:rc.tot+rm.tot, d:rc.d+rm.d, v:rc.v+rm.v,
+    ni:rc.ni+rm.ni, ep:rc.ep+rm.ep, ent:rc.ent+rm.ent,
+    avg:Math.round((rc.avg*(rc.ep||1)+rm.avg*(rm.ep||1))/((rc.ep||1)+(rm.ep||1)))
+  };
+
+  function secTable(nom, r){
+    return '<h3 style="font-size:14px;font-weight:700;color:#534AB7;margin:20px 0 10px;">'+nom+'</h3>'+
+      '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;">'+
+      '<div class="card"><div class="card-val">'+r.tot+'</div><div class="card-lbl">Total</div></div>'+
+      '<div class="card"><div class="card-val" style="color:#3B6D11;">'+r.d+'</div><div class="card-lbl">Disponible</div></div>'+
+      '<div class="card"><div class="card-val" style="color:#0E6488;">'+r.v+'</div><div class="card-lbl">Vendida</div></div>'+
+      '<div class="card"><div class="card-val" style="color:#AD1457;">'+r.ep+'</div><div class="card-lbl">En proceso</div></div>'+
+      '<div class="card"><div class="card-val" style="color:#534AB7;">'+r.avg+'%</div><div class="card-lbl">Avance prom.</div></div>'+
+      '</div>';
+  }
+
+  var html = '<html><head><meta charset="UTF-8">'+
+    '<title>Reporte General — Residencial Montesinos</title>'+
+    '<style>*{box-sizing:border-box;font-family:system-ui,sans-serif;}body{margin:20px;color:#111;}'+
+    '.card{background:#f9f9f9;border-radius:8px;padding:12px;text-align:center;}'+
+    '.card-val{font-size:24px;font-weight:700;}.card-lbl{font-size:11px;color:#888;margin-top:2px;}'+
+    'hr{border:none;border-top:2px solid #f0f0f0;margin:20px 0;}'+
+    '@media print{button{display:none!important;}}</style>'+
+    '</head><body>'+
+    headerRpt('Reporte General de Obra','Residencial Montesinos — Todas las secciones')+
+
+    '<h3 style="font-size:14px;font-weight:700;color:#111;margin:0 0 12px;">RESUMEN TOTAL</h3>'+
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px;padding:16px;background:#f0effe;border-radius:10px;">'+
+    '<div class="card" style="background:#fff;"><div class="card-val" style="color:#534AB7;">'+rtot.tot+'</div><div class="card-lbl">Total lotes</div></div>'+
+    '<div class="card" style="background:#fff;"><div class="card-val" style="color:#3B6D11;">'+rtot.d+'</div><div class="card-lbl">Disponible</div></div>'+
+    '<div class="card" style="background:#fff;"><div class="card-val" style="color:#0E6488;">'+rtot.v+'</div><div class="card-lbl">Vendida</div></div>'+
+    '<div class="card" style="background:#fff;"><div class="card-val" style="color:#AD1457;">'+rtot.ep+'</div><div class="card-lbl">En proceso</div></div>'+
+    '<div class="card" style="background:#fff;"><div class="card-val" style="color:#534AB7;">'+rtot.avg+'%</div><div class="card-lbl">Avance prom.</div></div>'+
+    '</div>'+
+    '<hr>'+
+    secTable('Sección Campello', rc)+
+    '<hr>'+
+    secTable('Paseo Montesinos — La Campiña', rm)+
+    '<div style="margin-top:30px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#aaa;text-align:center;">'+
+    'Residencial Montesinos — Reporte generado el '+fmtDate()+'</div>'+
+    '<div style="margin-top:20px;text-align:center;">'+
+    '<button onclick="window.print()" style="padding:10px 24px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">&#128196; Imprimir / Guardar PDF</button>'+
+    '</div></body></html>';
+
+  var w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+// === FIN REPORTES ===
+
+function salirApp(){
+  if(confirm("¿Deseas salir de la aplicación?")){
+    // Cerrar sesión de editor si está activa
+    editorActivo = false;
+    document.getElementById("user-info").style.display="none";
+    document.getElementById("login-btn").style.display="block";
+    // Limpiar el plano y panel
+    layer.innerHTML="";
+    document.getElementById("panel").innerHTML='<div class="hint">&#127968;<br>Selecciona un lote<br>para ver su ficha</div>';
+    sel=null; curL=null;
+    // Mostrar pantalla de salida
+    document.body.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f5f4f0;text-align:center;gap:16px;">'+
+      '<div style="font-size:48px;">&#127968;</div>'+
+      '<div style="font-size:20px;font-weight:700;color:#534AB7;">Residencial Montesinos</div>'+
+      '<div style="font-size:14px;color:#888;">Has cerrado la aplicación correctamente</div>'+
+      '<button onclick="location.reload()" style="margin-top:16px;padding:12px 28px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">&#8635; Volver a entrar</button>'+
+      '</div>';
+  }
+}
+
 bg.setAttribute("href","plano_campello.svg");
 renderMzBar();
 loadSheet();
@@ -519,4 +778,39 @@ loadSheet();
     <button class="btn" style="margin-top:8px;" onclick="cerrarLogin()">Cancelar</button>
   </div>
 </div>
+
+<div class="rpt-menu-bg" id="rpt-menu">
+  <div class="rpt-menu">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div>
+        <h2>&#128196; Generar Reporte</h2>
+        <p style="margin-bottom:0;">Elige el tipo de reporte a generar</p>
+      </div>
+      <button class="xbtn" onclick="cerrarReportes()">&#215;</button>
+    </div>
+    <div class="rpt-opt" onclick="generarReporteLote()">
+      <div class="rpt-opt-icon">&#127968;</div>
+      <div>
+        <div class="rpt-opt-title">Reporte por Lote</div>
+        <div class="rpt-opt-sub">Ficha individual con foto, actividades y datos del lote seleccionado</div>
+      </div>
+    </div>
+    <div class="rpt-opt" onclick="generarReporteManzana()">
+      <div class="rpt-opt-icon">&#128205;</div>
+      <div>
+        <div class="rpt-opt-title">Reporte por Manzana</div>
+        <div class="rpt-opt-sub">Resumen de todos los lotes de la manzana activa</div>
+      </div>
+    </div>
+    <div class="rpt-opt" onclick="generarReporteGeneral()">
+      <div class="rpt-opt-icon">&#128202;</div>
+      <div>
+        <div class="rpt-opt-title">Reporte General</div>
+        <div class="rpt-opt-sub">Dashboard completo con m&#233;tricas de toda la obra</div>
+      </div>
+    </div>
+    <button class="btn" onclick="cerrarReportes()">Cancelar</button>
+  </div>
+</div>
+<div id="rpt-print" class="rpt-print"></div>
 </body></html>
