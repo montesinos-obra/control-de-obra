@@ -1,0 +1,23 @@
+{
+  "name": "Residencial Montesinos",
+  "short_name": "Montesinos",
+  "description": "Control de Obra - Residencial Montesinos",
+  "start_url": "/control-de-obra/",
+  "scope": "/control-de-obra/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#534AB7",
+  "theme_color": "#534AB7",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "business",
+    "productivity"
+  ]
+}
