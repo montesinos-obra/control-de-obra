@@ -407,7 +407,7 @@ function showFicha(l,poly){
       '<div class="row" style="margin-top:6px"><span class="rl">Últ. actualización</span><span class="rv">'+l.fav+'</span></div></div>'+
       '<div class="sec"><div class="sec-t">Actividades</div>'+acts+'</div>'+
       '<div class="sec"><div class="sec-t">Foto de avance</div>'+
-      (l.foto?'<img src="'+l.foto.replace("uc?id=","thumbnail?id=")+'&sz=w400" style="width:100%;border-radius:8px;border:1px solid #ddd;margin-bottom:6px;" onerror="this.style.display=\'none\'" crossorigin="anonymous">':'')+
+      (l.foto?'<div style="margin-bottom:8px;"><img src="'+l.foto+'" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;border:1px solid #ddd;" onerror="this.src=l.foto.replace(\'thumbnail?id=\',\'uc?id=\').replace(\'&sz=w800\',\'\')" loading="lazy"><div style="font-size:10px;color:#aaa;text-align:center;margin-top:3px;">Foto de avance</div></div>':'')+
       (editorActivo?'<div class="fbox" onclick="document.getElementById(\'foto-input\').click()">&#128247; Tomar / subir foto</div>':"<div style=\"font-size:12px;color:#aaa;padding:6px 0;\">Solo editores pueden subir fotos</div>")+
       '<div id="fst" style="font-size:11px;color:#888;text-align:center;margin-top:4px;display:none;"></div></div>';
   }else{
@@ -579,7 +579,7 @@ function generarReporteLote(){
       '</div>';
   }).join('');
 
-  var fotoHtml = l.foto?'<div style="margin-top:16px;"><div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px;">FOTO DE AVANCE</div><img src="'+l.foto.replace("uc?id=","thumbnail?id=")+'&sz=w600" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;border:1px solid #ddd;"></div>':'';
+  var fotoHtml = l.foto?'<div style="margin-top:16px;page-break-inside:avoid;"><div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px;">FOTO DE AVANCE</div><img src="'+l.foto+'" style="width:280px;height:200px;object-fit:cover;border-radius:8px;border:1px solid #ddd;display:block;"></div>':'';
 
   var html = '<html><head><meta charset="UTF-8">'+
     '<title>Reporte Lote '+l.lote+' Mz'+l.mz+'</title>'+
