@@ -469,23 +469,60 @@ async function guardar(){
   btn.textContent="💾 Guardar";btn.disabled=false;
 }
 
+function comprimirFoto(file, maxKB, callback){
+  var maxBytes = maxKB * 1024;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement("canvas");
+      var maxW = 1200, maxH = 1200;
+      var w = img.width, h = img.height;
+      if(w > maxW){ h = Math.round(h*maxW/w); w = maxW; }
+      if(h > maxH){ w = Math.round(w*maxH/h); h = maxH; }
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      var quality = 0.8;
+      var result = canvas.toDataURL("image/jpeg", quality);
+      // Reducir calidad hasta que quepa en maxKB
+      while(result.length * 0.75 > maxBytes && quality > 0.2){
+        quality -= 0.1;
+        result = canvas.toDataURL("image/jpeg", quality);
+      }
+      callback(result);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 function subirFoto(input){
   if(!input.files||!input.files[0])return;
   var file=input.files[0];
   var st=document.getElementById("fst");
-  if(st){st.style.display="block";st.textContent="⟳ Subiendo foto...";}
-  var reader=new FileReader();
-  reader.onload=async function(e){
+  if(st){st.style.display="block";st.textContent="⟳ Comprimiendo foto...";}
+  comprimirFoto(file, 400, async function(b64){
+    var kb = Math.round(b64.length * 0.75 / 1024);
+    if(st){st.textContent="⟳ Subiendo foto ("+kb+"KB)...";}
     try{
       var r=await fetch(API,{method:"POST",body:JSON.stringify({
         tipo:"foto",seccion:curL.sec,manzana:curL.mz,lote:curL.lote,
-        imagen:e.target.result,mimeType:file.type})});
+        imagen:b64,mimeType:"image/jpeg"})});
       var res=await r.json();
-      if(res.ok){if(st){st.textContent="✅ Foto guardada";st.style.color="#1D9E75";}}
-      else{if(st){st.textContent="Error: "+(res.error||"fallo");st.style.color="#e74c3c";}}
-    }catch(err){if(st){st.textContent="Error de conexión";st.style.color="#e74c3c";}}
-  };
-  reader.readAsDataURL(file);
+      if(res.ok){
+        if(st){st.textContent="✅ Foto guardada ("+kb+"KB)";st.style.color="#1D9E75";}
+        // Mostrar preview
+        var pi=document.getElementById("foto-prev");
+        var im=document.getElementById("foto-img");
+        if(pi&&im){im.src=b64;pi.style.display="block";}
+      }else{
+        if(st){st.textContent="Error: "+(res.error||"fallo");st.style.color="#e74c3c";}
+      }
+    }catch(err){
+      if(st){st.textContent="Error de conexión";st.style.color="#e74c3c";}
+    }
+  });
 }
 
 
